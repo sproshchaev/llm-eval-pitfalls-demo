@@ -1,0 +1,25 @@
+name: check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Data regenerates byte for byte
+        run: |
+          python3 generate_data.py /tmp/data
+          diff -r /tmp/data data
+
+      - name: Results match expected.txt
+        run: ./run.sh
+
+      - name: Gate fails on hard invariant
+        run: |
+          if python3 eval.py --strict > /dev/null; then
+            echo "gate should fail on promise_beyond_policy"; exit 1
+          fi

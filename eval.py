@@ -9,6 +9,7 @@
 Живая модель и ключи API не нужны: ответы уже записаны в data/.
 """
 import json
+import math
 import os
 import sys
 from collections import OrderedDict
@@ -26,6 +27,14 @@ def load(name):
 
 def pct(x):
     return f"{x * 100:.1f}%"
+
+
+def wilson(k, n, z=1.96):
+    """95% доверительный интервал Уилсона для доли k из n."""
+    p = k / n
+    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
+    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return centre - half, centre + half
 
 
 def report_categories(runs):
@@ -69,6 +78,8 @@ def report_judge(sample):
     print(f"доля совпадений:         {pct(agree / len(sample))}")
     print(f"precision:               {pct(tp / (tp + fp))}")
     print(f"recall:                  {pct(tp / positives)}  (пропущено {fn} из {positives})")
+    lo, hi = wilson(tp, positives)
+    print(f"recall, 95% интервал:    {pct(lo)} - {pct(hi)}  (всего {positives} нарушений в выборке)")
     print(f"судья «всегда нет»:      совпадение {pct(always_no / len(sample))}, recall 0.0%")
     print()
 
